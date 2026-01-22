@@ -83,4 +83,4 @@ G. High-Value Layer-One Indicators
 | Role Mixing     | One surface handling many roles         |
 | Legacy Paths    | Old flows still active                  |
 | API Reuse       | One API serving many clients            |
-
+ 
