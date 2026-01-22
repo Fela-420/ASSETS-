@@ -1,320 +1,226 @@
-# ASSETS-
-1. Account Takeover (ATO)
+1. Account Takeover (ATO) — What to Find
+Account-Related Surfaces
+ | Category        | What to Look For                              |
+| --------------- | --------------------------------------------- |
+| Login           | Login pages, alternate login endpoints        |
+| Recovery        | Password reset pages                          |
+| Profile Changes | Email change flows, phone number change flows |
+| MFA             | MFA / OTP setup pages                         |
+| Federation      | OAuth / “Login with” flows                    |
+| Sessions        | Session management endpoints                  |
 
-What you’re looking to FIND (signals & surfaces)
+B. Valuable Indicators  
 
-A. Account-Related Surfaces
-
-Login pages
-
-Password reset pages
-
-Email change flows
-
-Phone number change flows
-
-MFA / OTP setup pages
-
-OAuth / “Login with” flows
-
-Session management endpoints
-
-B. Valuable Indicators
-
-Password reset tokens (URLs, params, headers)
-
-OTP / verification codes
-
-Long-lived session tokens
-
-Refresh tokens
-
-Remember-me cookies
+| Indicator Type  | Examples                                      |
+| --------------- | --------------------------------------------- |
+| Reset Artifacts | Password reset tokens (URLs, params, headers) |
+| Verification    | OTP / verification codes                      |
+| Sessions        | Long-lived session tokens                     |
+| Tokens          | Refresh tokens                                |
+| Persistence     | Remember-me cookies                           |
 
 C. Structural Clues
 
-Multiple authentication flows for the same account
-
-Legacy login endpoints still live
-
-Mobile and web auth using the same backend
-
-Different error messages for different login states
-
-Email or phone verification not consistently enforced
+| Area         | Signals                                             |
+| ------------ | --------------------------------------------------- |
+| Auth Design  | Multiple authentication flows for same account      |
+| Legacy       | Old login endpoints still reachable                 |
+| Platform     | Mobile and web using same auth backend              |
+| Errors       | Different error messages for different login states |
+| Verification | Email or phone verification inconsistently enforced |
 
 D. High-Value Findings
+| Observation         | Meaning                                              |
+| ------------------- | ---------------------------------------------------- |
+| Partial Access      | Ability to act as a user without full authentication |
+| Weak Re-Auth        | Account state changes without re-authentication      |
+| Session Persistence | Sessions survive password changes                    |
+| Token Scope         | Tokens not clearly bound to user identity            |
 
-Ability to act as a user without full authentication
+2. Broken Access Control / IDOR — What to Find
 
-Account state changes without re-authentication
+A. Identifier Patterns (Core Signals)
+| Identifier Type | Examples                                        |
+| --------------- | ----------------------------------------------- |
+| Numeric         | `id=1`, `user_id=23`                            |
+| UUID            | `uuid`, `guid`                                  |
+| Commerce        | Order numbers, invoice numbers                  |
+| Files           | File IDs                                        |
+| Messaging       | Message IDs                                     |
+| Transport       | Object references in URLs, headers, JSON bodies |
 
-Sessions that survive password changes
-
-Tokens that don’t appear user-bound
-
-2. Broken Access Control / IDOR
-
-What you’re looking to FIND
-
-A. Identifier Patterns (Core IDOR Signals)
-
-Numeric IDs (id=1, user_id=23)
-
-UUIDs (uuid, guid)
-
-Order numbers
-
-Invoice numbers
-
-File IDs
-
-Message IDs
-
-Object references in URLs, headers, or JSON bodies
 
 B. Object-Driven Endpoints
-
-/users/
-
-/profiles/
-
-/orders/
-
-/documents/
-
-/tickets/
-
-/messages/
-
-/files/
-
-/transactions/
+| Object Type | Endpoint Patterns            |
+| ----------- | ---------------------------- |
+| Users       | `/users/`, `/profiles/`      |
+| Commerce    | `/orders/`, `/transactions/` |
+| Documents   | `/documents/`, `/files/`     |
+| Support     | `/tickets/`, `/messages/`    |
 
 C. Role Boundaries
-
-User vs admin vs support
-
-Read vs write vs delete
-
-Own objects vs shared objects vs global objects
+| Boundary Type | Examples                        |
+| ------------- | ------------------------------- |
+| Role          | User vs admin vs support        |
+| Action        | Read vs write vs delete         |
+| Ownership     | Own objects vs shared vs global |
 
 D. High-Value Indicators
+| Indicator        | Why It Matters                           |
+| ---------------- | ---------------------------------------- |
+| Role Reuse       | Same endpoint used by multiple roles     |
+| Ownership Fields | Client-supplied ownership attributes     |
+| UI Mismatch      | Ownership not visible in UI              |
+| Trust            | Backend trusts client-provided IDs       |
+| Overexposure     | APIs return more fields than UI displays |
 
-Same endpoint used by multiple roles
-
-Client-supplied ownership fields
-
-Object ownership not shown explicitly in UI
-
-Backend trusting IDs provided by the client
-
-APIs returning more fields than shown in UI
-
-3. Business Logic Flaws
-
-What you’re looking to FIND
+3. Business Logic Flaws — What to Find
 
 A. Money & Value Systems
-
-Checkout flows
-
-Subscription upgrades/downgrades
-
-Trials
-
-Coupons / promo codes
-
-Wallets / credits / balances
-
-Refunds
-
-Loyalty points
+| System        | Examples                     |
+| ------------- | ---------------------------- |
+| Payments      | Checkout flows               |
+| Subscriptions | Upgrades / downgrades        |
+| Promotions    | Trials, coupons, promo codes |
+| Credits       | Wallets, balances            |
+| Post-Payment  | Refunds                      |
+| Incentives    | Loyalty points               |
 
 B. State-Based Workflows
-
-Multi-step processes
-
-Status-driven actions
-
-“Pending → Approved → Completed” flows
-
-Verification-dependent actions
+| Workflow Type | Examples                           |
+| ------------- | ---------------------------------- |
+| Multi-Step    | Sequential processes               |
+| Status        | Pending → Approved → Completed     |
+| Verification  | Actions tied to verification state |
 
 C. Assumptions to Notice
-
-Client controls prices, quantities, or plans
-
-Client controls timing or order of steps
-
-Same action callable multiple times
-
-No visible server confirmation of state
+| Assumption Area | Signal                               |
+| --------------- | ------------------------------------ |
+| Pricing         | Client controls prices or quantities |
+| Flow            | Client controls step order           |
+| Reuse           | Same action callable repeatedly      |
+| Validation      | No visible server confirmation       |
 
 D. High-Value Indicators
+| Indicator        | Meaning                            |
+| ---------------- | ---------------------------------- |
+| Early Completion | Final states reachable prematurely |
+| Reusability      | Coupons / credits reusable         |
+| Weak Validation  | State changes without checks       |
+| UI Trust         | Backend trusts UI flow             |
+| Visibility       | Prices / plans visible in requests |
 
-Ability to reach final states early
-
-Reusable value tokens (coupons, credits)
-
-State changes without corresponding checks
-
-Backend trusting UI sequence
-
-Price or plan values visible in requests
-
-4. SSRF (Server-Side Request Forgery)
-
-What you’re looking to FIND
+4. SSRF — What to Find
 
 A. URL-Accepting Features
-
-Import from URL
-
-Fetch image from URL
-
-Webhooks
-
-PDF generation from URL
-
-Link preview generation
-
-API integrations
-
-Feed readers
+| Feature      | Examples                |
+| ------------ | ----------------------- |
+| Imports      | Import from URL         |
+| Media        | Fetch image from URL    |
+| Automation   | Webhooks                |
+| Documents    | PDF generation from URL |
+| Metadata     | Link preview generation |
+| Integrations | API integrations        |
+| Feeds        | Feed readers            |
 
 B. Network Interaction Clues
-
-Server fetches external resources
-
-URLs stored server-side
-
-Background jobs fetching data
-
-Callbacks or webhooks
+| Clue      | Meaning                           |
+| --------- | --------------------------------- |
+| Fetching  | Server fetches external resources |
+| Storage   | URLs stored server-side           |
+| Jobs      | Background fetch processes        |
+| Callbacks | Webhook callbacks                 |
 
 C. Input Locations
-
-URL parameters
-
-JSON fields
-
-Headers
-
-File metadata
-
-Redirect URLs
+| Location   | Examples       |
+| ---------- | -------------- |
+| Params     | URL parameters |
+| Payload    | JSON fields    |
+| Headers    | Custom headers |
+| Files      | File metadata  |
+| Navigation | Redirect URLs  |
 
 D. High-Value Indicators
+| Indicator       | Why Important                            |
+| --------------- | ---------------------------------------- |
+| Arbitrary Fetch | Backend accesses arbitrary URLs          |
+| Errors          | Internal or cloud-related error messages |
+| Timing          | Response timing differences              |
+| Behavior        | Fetch behavior differs from client       |
 
-Backend accesses arbitrary URLs
-
-Internal or cloud-related error messages
-
-Response timing differences
-
-Fetch behavior not mirrored client-side
-
-5. Authentication Bypass
-
-What you’re looking to FIND
+5. Authentication Bypass — What to Find
 
 A. Auth Boundaries
+| Boundary      | Examples                            |
+| ------------- | ----------------------------------- |
+| Session State | Different behavior logged in vs out |
+| Timing        | APIs called before login completes  |
+| Onboarding    | Setup or onboarding endpoints       |
+| Recovery      | Password reset endpoints            |
+| Verification  | Account verification endpoints      |
 
-Endpoints that behave differently when logged in vs logged out
-
-APIs called before login completes
-
-Setup or onboarding endpoints
-
-Password reset endpoints
-
-Account verification endpoints
 
 B. Trust Indicators
 
-Headers controlling auth state
-
-Cookies that indicate login
-
-Tokens passed via URL or JSON
-
-Flags like is_authenticated, verified, role
+| Indicator | Examples                               |
+| --------- | -------------------------------------- |
+| Headers   | Headers controlling auth               |
+| Cookies   | Login state cookies                    |
+| Tokens    | Tokens in URL or JSON                  |
+| Flags     | `is_authenticated`, `verified`, `role` |
 
 C. Structural Clues
-
-Multiple auth methods for same account
-
-Mobile and web auth differences
-
-Legacy endpoints still functional
-
-Partial auth states accepted
+| Clue       | Meaning                           |
+| ---------- | --------------------------------- |
+| Redundancy | Multiple auth methods per account |
+| Platform   | Mobile vs web differences         |
+| Legacy     | Old endpoints still active        |
+| State      | Partial auth states accepted      |
 
 D. High-Value Findings
+| Finding             | Impact                              |
+| ------------------- | ----------------------------------- |
+| Missing Enforcement | Sensitive actions without full auth |
+| Client-Side Only    | Auth enforced only in UI            |
+| Trust               | Backend trusts client auth flags    |
+| Gaps                | Endpoints missing auth entirely     |
 
-Sensitive actions without full authentication
-
-Auth enforced only client-side
-
-Backend trusts client auth flags
-
-Endpoints missing auth checks entirely
-
-6. Sensitive Data Exposure
-
-What you’re looking to FIND
+6. Sensitive Data Exposure — What to Find
 
 A. Data Types
-
-Email addresses
-
-Phone numbers
-
-Full names
-
-Addresses
-
-API keys
-
-Tokens
-
-Internal IDs
-
-Payment metadata
-
-Logs
+| Data      | Examples                |
+| --------- | ----------------------- |
+| Identity  | Email, phone, full name |
+| Location  | Addresses               |
+| Secrets   | API keys, tokens        |
+| Internals | Internal IDs            |
+| Payments  | Payment metadata        |
+| System    | Logs                    |
 
 B. Exposure Locations
-
-API responses
-
-Error messages
-
-Debug endpoints
-
-Export/download features
-
-Mobile APIs
-
-Old or unused endpoints
+| Location | Examples                   |
+| -------- | -------------------------- |
+| APIs     | API responses              |
+| Errors   | Error messages             |
+| Debug    | Debug endpoints            |
+| Files    | Export / download features |
+| Mobile   | Mobile APIs                |
+| Legacy   | Old or unused endpoints    |
 
 C. Structural Clues
+| Clue          | Meaning                     |
+| ------------- | --------------------------- |
+| Verbosity     | Over-verbose responses      |
+| Unused Fields | Fields not used by UI       |
+| Flags         | Hidden debug flags          |
+| Versions      | Older APIs expose more data |
 
-Over-verbose responses
+ D. High-Value Indicators
+ | Indicator  | Severity                      |
+| ---------- | ----------------------------- |
+| Cross-User | Data of other users           |
+| No Auth    | Data without authentication   |
+| Internal   | System details exposed        |
+| Secrets    | Secrets embedded in responses |
 
-Fields not used by UI
 
-Hidden debug flags
-
-Versioned APIs exposing more data
-
-D. High-Value Indicators
-
-Data belonging to other users
-
-Data accessible without auth
-
-Internal system details
-
-Secrets embedded in responses
