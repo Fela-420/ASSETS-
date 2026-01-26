@@ -1,71 +1,42 @@
-Authorization Matrix → IDOR / BOLA (Bug Bounty Mapping)
-1️⃣ Authorization Matrix (Hacker Translation)
-Matrix Concept	What It Means in Bug Bounty
-Role	Logged-in user type (user, admin, seller, org member)
-Service	API endpoint
-URI parameter ({id})	Object ID (userId, orderId, messageId)
-Allowed roles	Who should access the object
-Test POV	“What happens if I try this as someone else?”
 
-IDOR / BOLA happens when:
-Endpoint access exists without verifying object ownership or relationship.
-
-Example
-
-Request	Result	Bug
-DELETE /messages/1 (anonymous)	200 OK	Broken Access Control → IDOR (if 1 belongs to another user)
-2️⃣ Bug Bounty Testing Workflow (Step-by-Step)
-Step	Action	What to Verify	Bug If True
-1	Access object as owner	200 OK, object belongs to you	Baseline
-2	Change object ID only	Access to other user’s object	IDOR
-3	Downgrade auth (no/low token)	Action still allowed	Vertical BAC
-4	Swap HTTP method	Other methods bypass controls	Method bypass
-
-Example
-
-Method	Endpoint	Result
-GET	/api/orders/123	403
-DELETE	/api/orders/123	200 ❌
-3️⃣ REST / API-Only Automation Logic
-Component	Purpose
-Multiple users	Cross-user object testing
-Known object IDs	Ownership validation
-Role tokens	Horizontal & vertical testing
-Replay tooling	Automation & scale
-
-Automation Logic
-
-Loop	Test
-Endpoint	All APIs
-Token	All roles
-Object ID	Owned vs not owned
-Result	200 OK where 403 expected → IDOR
-
-Burp Setup
-
-Tool	Use
-Repeater	Manual confirmation
-Intruder	IDs + tokens
-Logger++	Detect unexpected 200
-4️⃣ Common Authorization Matrix Failures (Real Bug Bounty Wins)
-#	Mistake	What Goes Wrong	Bug Type
-1	Endpoint-only protection	No ownership check	BOLA
-2	Role check only	No relationship validation	Horizontal IDOR
-3	GET secured only	PUT/DELETE open	High-impact BAC
-4	Frontend-only controls	API still works	BAC
-5	New APIs not in matrix	Mobile/internal exposed	Fresh IDOR
-6	Filtering ≠ authorization	User-controlled parameters	Param IDOR
-
-Examples
-
-Pattern	Issue
-if user.role == "USER"	Missing object.user_id == user.id
-/api/orders?user_id=me	Accepts /api/orders?user_id=1234
-5️⃣ Bug Bounty Mental Checklist (Daily Use)
-Question	Why It Matters
-Can I change an ID?	Object-level control
-Can I use another user’s token?	Horizontal IDOR
-Can I remove the token?	Missing auth
-Can I change HTTP method?	Method bypass
-Can I hit mobile/internal APIs?	Shadow endpoints
-Do responses differ (403 vs 200)?	Authorization failure
+| Section    | #   | Concept / Area           | What to Ask / Understand                                  | What to Test / Do                      | Expected Secure Behavior    | Bug If It Happens | Examples / Notes                      |
+| ---------- | --- | ------------------------ | --------------------------------------------------------- | -------------------------------------- | --------------------------- | ----------------- | ------------------------------------- |
+| Matrix     | 1️⃣ | Role                     | What user type is this? (user, admin, seller, org member) | Test same request with different roles | Only intended roles allowed | Vertical BAC      | Low-priv user accessing admin objects |
+| Matrix     |     | Service                  | What endpoint is this protecting?                         | Enumerate API endpoints                | Endpoint enforces access    | BAC               | `/api/orders`                         |
+| Matrix     |     | URI parameter `{id}`     | What object does this ID represent?                       | Change object ID                       | Access limited to owner     | IDOR / BOLA       | `orderId`, `userId`, `messageId`      |
+| Matrix     |     | Allowed roles            | Who *should* access this object?                          | Try as other users                     | Ownership enforced          | IDOR              | Relationship missing                  |
+| Matrix     |     | Test POV                 | “What if I try this as someone else?”                     | Cross-user testing                     | 403 / 404                   | IDOR              | Core bug bounty question              |
+| IDOR       |     | Definition               | Endpoint allows access without ownership validation       | Access foreign object                  | Blocked                     | IDOR / BOLA       | Object-level failure                  |
+| Example    |     | Auth Failure             | Is auth required at all?                                  | Call without token                     | 401 / 403                   | BAC               |                                       |
+| Example    |     |                          | `DELETE /messages/1` (anonymous)                          | Returns `200 OK`                       | Should fail                 | IDOR              | If `1` belongs to another user        |
+| Workflow   | 2️⃣ | Step 1                   | Can owner access their object?                            | Access as owner                        | `200 OK`                    | —                 | Baseline                              |
+| Workflow   |     | Step 2                   | What happens if ID changes?                               | Change only object ID                  | Access denied               | IDOR              | Cross-user access                     |
+| Workflow   |     | Step 3                   | What if auth is downgraded?                               | No token / low token                   | Denied                      | Vertical BAC      | Privilege escalation                  |
+| Workflow   |     | Step 4                   | Are all methods protected?                                | Swap HTTP method                       | Same controls               | Method bypass     | GET vs DELETE                         |
+| Method     |     | Example                  | Method enforcement                                        | GET `/api/orders/123`                  | 403                         | —                 |                                       |
+| Method     |     |                          | DELETE `/api/orders/123`                                  | 200 ❌                                  | Should be 403               | BAC               | Classic bypass                        |
+| Automation | 3️⃣ | Multiple users           | Do you have multiple accounts?                            | Test cross-user                        | Ownership enforced          | IDOR              | Required for testing                  |
+| Automation |     | Known IDs                | Do you know object IDs per user?                          | Replay with other IDs                  | Blocked                     | IDOR              | Enumeration                           |
+| Automation |     | Role tokens              | Tokens per role                                           | Swap tokens                            | Role enforced               | Vertical BAC      |                                       |
+| Automation |     | Replay tooling           | Can requests be replayed?                                 | Burp / scripts                         | Controls enforced           | IDOR              | Automation-ready                      |
+| Automation |     | Logic                    | Endpoint loop                                             | Test all endpoints                     | 403 when invalid            | IDOR              |                                       |
+| Automation |     | Logic                    | Token loop                                                | All roles                              | Enforced                    | Vertical BAC      |                                       |
+| Automation |     | Logic                    | Object ID loop                                            | Owned vs not                           | Enforced                    | IDOR              |                                       |
+| Automation |     | Result                   | `200` where `403` expected                                | Should not happen                      | IDOR                        | Reporting trigger |                                       |
+| Burp       |     | Repeater                 | Manual validation                                         | Confirm behavior                       | Secure                      | IDOR              |                                       |
+| Burp       |     | Intruder                 | IDs + tokens                                              | Mass testing                           | Secure                      | IDOR              |                                       |
+| Burp       |     | Logger++                 | Response analysis                                         | Spot `200 OK`                          | Secure                      | IDOR              |                                       |
+| Failures   | 4️⃣ | Endpoint-only protection | Is only auth checked?                                     | Access foreign object                  | Ownership check             | BOLA              | Most common                           |
+| Failures   |     | Role-only check          | Is relationship validated?                                | Same role, other object                | Blocked                     | Horizontal IDOR   |                                       |
+| Failures   |     | GET-only security        | Other methods protected?                                  | PUT / DELETE                           | Blocked                     | High-impact BAC   |                                       |
+| Failures   |     | Frontend-only controls   | UI vs API                                                 | Direct API call                        | Blocked                     | BAC               | Always test API                       |
+| Failures   |     | Missing endpoints        | New APIs added?                                           | Mobile/internal                        | Secured                     | Fresh IDOR        |                                       |
+| Failures   |     | Filtering logic          | Filter ≠ auth                                             | Change parameters                      | Blocked                     | Param IDOR        |                                       |
+| Example    |     | Role logic               | `if user.role == "USER"`                                  | Missing ownership                      | Should verify               | IDOR              | No `object.user_id == user.id`        |
+| Example    |     | Filter abuse             | `/api/orders?user_id=me`                                  | Use `user_id=1234`                     | Should block                | IDOR              | Parameter-based                       |
+| Checklist  | 5️⃣ | ID change                | Can ID be modified?                                       | Try another ID                         | Blocked                     | IDOR              |                                       |
+| Checklist  |     | Token swap               | Other user token?                                         | Swap token                             | Blocked                     | Horizontal IDOR   |                                       |
+| Checklist  |     | No token                 | Auth required?                                            | Remove token                           | 401                         | BAC               |                                       |
+| Checklist  |     | Method swap              | Method enforced?                                          | Change verb                            | Same rules                  | Method bypass     |                                       |
+| Checklist  |     | Shadow APIs              | Mobile/internal paths?                                    | Test them                              | Secured                     | IDOR              |                                       |
+| Checklist  |     | Response diff            | 403 vs 200                                                | Compare responses                      | Consistent                  | IDOR              | Signal to dig deeper                  |
