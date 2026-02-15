@@ -1,1 +1,53 @@
+🔎 PHASE 1 — Scope Collection & Domain Expansion
+🎯 Goal:
+
+Build full target surface.
+
+1️⃣ Confirm Scope
+
+Manually read program page carefully.
+
+2️⃣ Subdomain Enumeration
+Tools:
+
+subfinder
+
+amass
+
+assetfinder
+
+crt.sh (manual)
+
+SecurityTrails (if available)
+
+Output:
+
+You want:
+
+api.domain.com
+
+admin.domain.com
+
+dev.domain.com
+
+staging.domain.com
+
+vpn.domain.com
+
+internal.domain.com
+
+Combine all results → remove duplicates → final list.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
