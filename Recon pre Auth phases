@@ -44,6 +44,358 @@ Combine all results → remove duplicates → final list.
 
 
 
+🌐 PHASE 2 — Live Host Detection
+🎯 Goal:
+
+Find which subdomains are alive.
+
+Tool:
+
+httpx
+
+Check:
+
+Status code
+
+Title
+
+Tech detection
+
+Web server
+
+CDN
+
+Output:
+
+Live web assets
+
+Redirect behavior
+
+Interesting status codes (401, 403, 500)
+
+
+
+
+
+
+
+
+
+🧠 PHASE 3 — Technology Fingerprinting
+🎯 Goal:
+
+Understand what you're attacking.
+
+Tools:
+
+whatweb
+
+wappalyzer
+
+builtwith
+
+httpx -tech-detect
+
+Extract:
+
+Framework
+
+Backend language
+
+CMS
+
+Cloud provider
+
+CDN
+
+This tells you where logic flaws might exist.
+
+
+
+
+
+
+
+
+📂 PHASE 4 — URL & Endpoint Discovery
+
+This is CRITICAL.
+
+1️⃣ Historical URLs
+Tools:
+
+waybackurls
+
+gau
+
+katana
+
+Extract:
+
+Old API versions
+
+Deprecated endpoints
+
+Hidden panels
+
+Legacy admin routes
+
+2️⃣ Crawling
+Tools:
+
+katana
+
+hakrawler
+
+Burp crawler
+
+You want:
+
+/api/
+
+/v1/
+
+/v2/
+
+/admin
+
+/dashboard
+
+/internal
+
+/graphql
+
+/swagger
+
+/upload
+
+/export
+
+
+
+
+
+
+
+
+
+
+
+📜 PHASE 5 — JavaScript Analysis (VERY IMPORTANT)
+
+Most elite hunters live here.
+
+Tools:
+
+subjs
+
+linkfinder
+
+SecretFinder
+
+Manual JS review in Burp
+
+Extract:
+
+Hidden endpoints
+
+API URLs
+
+Tokens
+
+Internal IPs
+
+Feature flags
+
+Parameter names
+
+GraphQL queries
+
+JS reveals internal architecture.
+
+
+
+
+
+
+🔍 PHASE 6 — Parameter Discovery
+🎯 Goal:
+
+Find every parameter to test IDOR & logic flaws.
+
+Tools:
+
+arjun
+
+paramspider
+
+Burp proxy history
+
+Look for:
+
+user_id
+
+account_id
+
+order_id
+
+file_id
+
+role
+
+redirect
+
+amount
+
+email
+
+callback
+
+url
+
+Parameter discovery = IDOR gold.
+
+
+
+
+
+
+
+
+📡 PHASE 7 — API Mapping
+
+Most high bounties come from APIs.
+
+Look for:
+
+/api/
+
+/graphql
+
+/rest/
+
+/v1/
+
+/v2/
+
+Swagger docs
+
+OpenAPI docs
+
+Tools:
+
+Burp
+
+Postman
+
+Manual exploration
+
+GraphQL introspection
+
+Document:
+
+All endpoints
+
+Request method
+
+Required auth
+
+Parameters
+
+
+
+
+
+
+☁️ PHASE 8 — Cloud & Infrastructure
+🎯 Goal:
+
+Find exposed cloud resources.
+
+Tools:
+
+cloud_enum
+
+s3scanner
+
+awsbucketdump
+
+dnsx
+
+Check:
+
+S3 buckets
+
+Azure blobs
+
+Firebase configs
+
+GCP storage
+
+CI/CD leaks
+
+
+
+
+
+🔓 PHASE 9 — Port & Service Scanning
+Tool:
+
+naabu
+
+nmap
+
+Look for:
+
+8080
+
+8443
+
+22
+
+6379
+
+9200
+
+27017
+
+Non-standard services = high impact.
+
+
+
+
+
+
+
+🧪 PHASE 10 — Automated Pattern Scanning
+
+Now use automation smartly.
+
+Tools:
+
+nuclei
+
+gf patterns
+
+dalfox (XSS)
+
+Scan for:
+
+SSRF
+
+Open redirects
+
+LFI
+
+Exposed panels
+
+Misconfigurations
+
+Automation = filter.
+Manual = real bounty.
+
+
+
 
 
 
